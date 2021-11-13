@@ -14,6 +14,7 @@ import adofaiParser
 
 PosType = typing.Dict[str, int]
 ElementType = typing.Tuple[tkinter.Widget, PosType]
+LabelType = typing.Tuple[tkinter.Label, PosType]
 
 def Pos(x: int = 0, y: int = 0, width: int = 0, height: int = 0, anchor: str = '') -> PosType:
     pos: PosType = {}
@@ -32,18 +33,19 @@ def Font(family: str, size: int) -> tkinter.font.Font:
 class UI:
     def __init__(self):
         self.Elements: typing.List[ElementType] = []
+        self.Labels: typing.List[LabelType] = []
         self.adofaiFileName: str = ''
 
         self.BuildWindow()
-        self.InitStrings()
+        self.InitValues()
         self.BuildElements()
         self.PlaceElements()
 
     def BuildWindow(self):
         self.window = tkinter.Tk()
 
-        self.window.title("Magicshape with Free angle")
-        self.window.geometry("640x360")
+        self.window.title("얼불춤용 김밥말이")
+        self.window.geometry("640x480")
         self.window.resizable(False, False)
 
         def closeWindow(event):
@@ -52,18 +54,17 @@ class UI:
             
         self.window.bind('<Escape>', closeWindow)
     
-    def InitStrings(self):
-        self.style = tkinter.StringVar()
-        self.BPM = tkinter.StringVar()
-        self.Log = tkinter.StringVar()
-
-        self.style.set("styleDefault")
-        self.BPM.set("bpmMultiply")
-        self.Log.set('')
+    def InitValues(self):
+        self.Log = tkinter.StringVar(self.window, value='test', name='Log')
+        self.startAO = tkinter.DoubleVar(self.window, value=0, name='startAO')
+        self.endAO = tkinter.DoubleVar(self.window, value=180, name='endAO')
+        self.startI = tkinter.IntVar(self.window, value=100, name='startI')
+        self.endI = tkinter.IntVar(self.window, value=0, name="endI")
+        self.den = tkinter.IntVar(self.window, value=180, name='den')
     
     def BuildLabel(self, text: str, font: tkinter.font.Font, pos: PosType, parent: tkinter.Widget=None, *, var: tkinter.StringVar=None):
         label = tkinter.Label(parent if parent else self.window, text=text, height=3, font=font, textvariable=var)
-        self.Elements.append((label, pos))
+        self.Labels.append((label, pos))
         return label
     
     def BuildEntry(self, pos: PosType, parent: tkinter.Widget=None):
@@ -91,14 +92,25 @@ class UI:
         self.Elements.append((progress, pos))
         return progress
 
+    def BuildComboBox(self, values: typing.List[str], pos: PosType, parent: tkinter.Widget=None):
+        comboBox = tkinter.ttk.Combobox(parent if parent else self.window, values=values, state="readonly")
+        comboBox.current(0)
+        self.Elements.append((comboBox, pos))
+        return comboBox
+    
+    def BuildSpinBox(self, pos: PosType, parent: tkinter.Widget=None, *, var: tkinter.DoubleVar=None):
+        spinBox = tkinter.Spinbox(parent if parent else self.window, textvariable=var)
+        self.Elements.append((spinBox, pos))
+        return spinBox
+
     def BuildElements(self):
-        copyright = self.BuildLabel('made by Runas, ', Font("Arial", 10), Pos(380, 300))
-        copyright.bind('<Button-1>', lambda e: webbrowser.open_new('https://github.com/Runas8128/magicWithFreeAngle'))
-        copyright = self.BuildLabel('CC BY License', Font("Arial", 10), Pos(480, 300))
+        copyright = self.BuildLabel('made by Runas, ', Font("Arial", 10), Pos(380, 430))
+        copyright.bind('<Button-1>', lambda e: webbrowser.open_new('https://github.com/Runas8128/KimbapRoller'))
+        copyright = self.BuildLabel('CC BY License', Font("Arial", 10), Pos(480, 430))
         copyright.bind('<Button-1>', lambda e: webbrowser.open_new('https://creativecommons.org/licenses/by/4.0/deed.ko'))
 
-        self.BuildLabel("마법진 승수 프로그램", Font("Arial", 20), Pos(200, 0))
-        fileNameEntry = self.BuildEntry(Pos(60, 100, 400, 30))
+        self.BuildLabel("필터 김밥말이 프로그램", Font("Arial", 20), Pos(200, -10))
+        fileNameEntry = self.BuildEntry(Pos(60, 90, 400, 30))
 
         def onClickBrowseButton():
             adofaiFileName = tkinter.filedialog.askopenfilename(
@@ -113,47 +125,35 @@ class UI:
             fileNameEntry.insert(0, adofaiFileName)
             self.adofaiFileName = adofaiFileName
 
-        self.BuildButton("Browse...", onClickBrowseButton, Pos(490, 100, 100, 30))
+        self.BuildButton("Browse...", onClickBrowseButton, Pos(490, 90, 100, 30))
 
-        StyleFrame = self.BuildFrame("소용돌이 형식", Pos(75, 150, 150, 100))
+        self.BuildLabel("필터 종류 선택", Font('Arial', 12), Pos(60, 130, 100, 50))
+        filterComboBox = self.BuildComboBox(list(adofaiParser.Filters.keys()), Pos(65, 200, 175, 30))
+
+        self.BuildLabel("각도 오프셋 설정", Font('Arial', 12), Pos(300, 130, 100, 50))
+        self.BuildLabel("시작 각도", Font('Arial', 10), Pos(305, 180, 0, 20))
+        startAngleOffset = self.BuildSpinBox(Pos(380, 180, 100, 25), var=self.startAO)
+        self.BuildLabel("끝 각도", Font('Arial', 10), Pos(305, 220, 0, 20))
+        endAngleOffset = self.BuildSpinBox(Pos(380, 220, 100, 25), var=self.endAO)
+
+        self.BuildLabel("필터 강도 설정", Font('Arial', 12), Pos(60, 245, 100, 50))
+        self.BuildLabel("끝 각도", Font('Arial', 10), Pos(65, 295, 0, 20))
+        startIntensity = self.BuildSpinBox(Pos(140, 295, 100, 25), var=self.startI)
+        self.BuildLabel("끝 각도", Font('Arial', 10), Pos(65, 335, 0, 20))
+        endIntensity = self.BuildSpinBox(Pos(140, 325, 100, 25), var=self.endI)
         
-        self.BuildRadioButton("기본(소용돌이 X)", self.style, "styleDefault", Pos(0, 5), StyleFrame)
-        self.BuildRadioButton("내각", self.style, "styleInner", Pos(0, 30), StyleFrame)
-        self.BuildRadioButton("외각", self.style, "styleOuter", Pos(0, 55), StyleFrame)
+        self.BuildLabel("이펙 갯수", Font('Arial', 12), Pos(280, 245, 100, 50))
+        self.BuildLabel("많을수록 부드럽지만 렉이 심해집니다", Font('Arial', 10), Pos(300, 290, 0, 20))
+        density = self.BuildSpinBox(Pos(305, 320, 150, 25), var=self.den)
 
-        BPMFrame = self.BuildFrame("BPM 형태", Pos(245, 150, 200, 100))
-
-        BPMEntry = self.BuildEntry(Pos(60, 43, 80, 20), BPMFrame)
-
-        def enableEntry():
-            BPMEntry.configure(state="normal")
-            BPMEntry.update()
-
-        def disableEntry():
-            BPMEntry.configure(state="disabled")
-            BPMEntry.update()
-
-        disableEntry()
-
-        self.BuildRadioButton("승수", self.BPM, "bpmMultiply", Pos(0, 15), BPMFrame, command=disableEntry)
-        self.BuildRadioButton("BPM", self.BPM, "bpmBPM", Pos(0, 40), BPMFrame, command=enableEntry)
-        self.BuildLabel("BPM", Font("Arial", 10), Pos(150, 24), BPMFrame)
-
-        self.BuildLabel('', Font('Arial', 10), Pos(50, 300), var=self.Log)
-
-        progress = self.BuildProgressBar(Pos(50, 280))
+        self.BuildLabel("test", Font('Arial', 10), Pos(50, 410), var=self.Log)
+        progress = self.BuildProgressBar(Pos(50, 390, 400))
 
         def Run():
             fileName = fileNameEntry.get()
-            isBPM = self.BPM.get() == "bpmBPM"
-            bpm = "" if BPMEntry.cget('state') == "disabled" else BPMEntry.get()
 
             if not fileName or not os.path.isfile(fileName):
                 tkinter.messagebox.showerror("error", "파일을 선택해주세요!")
-                return
-            
-            if isBPM and not bpm.isdigit():
-                tkinter.messagebox.showerror("error", "BPM을 숫자로 입력해주세요!")
                 return
             
             def logger(log: str):
@@ -161,7 +161,11 @@ class UI:
                 progress.step(100 / 5)
             
             try:
-                adofaiParser.run(fileName, bpm, self.style.get(), logger)
+                adofaiParser.run(fileName, filterComboBox.get(),
+                    float(startAngleOffset.get()), float(endAngleOffset.get()),
+                    int(startIntensity.get()), int(endIntensity.get()),
+                    int(density.get()),
+                    logger)
                 tkinter.messagebox.showinfo("done", "성공했습니다!")
             except adofaiParser.ParseException as Error:
                 tkinter.messagebox.showerror("error", str(Error))
@@ -171,10 +175,13 @@ class UI:
                 progress.stop()
                 self.Log.set('')
 
-        self.BuildButton("실행!", Run, Pos(470, 150, 100, 100))
+        self.BuildButton("실행!", Run, Pos(485, 370, 100, 70))
         self.window.bind('<Return>', lambda event: Run())
     
     def PlaceElements(self):
+        for Label in self.Labels:
+            Label[0].place(**Label[1])
+
         for Element in self.Elements:
             Element[0].place(**Element[1])
 

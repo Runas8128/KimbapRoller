@@ -1,0 +1,23 @@
+필터
+Greyscale - 흑백
+Sepia - 세피아
+VHS - VHS
+LED - LED
+Rain - 비
+Blizzard - 눈폭풍
+PixelSnow - 픽셀 눈
+Compression - 압축
+Pixelate - 픽셀화
+Waves - 물결
+Static - 잡음
+Grain - 필름 그레인
+MotionBlur - 모션 블러
+Fisheye - 어안 렌즈
+Aberration - 색수차
+Drawing - 드로잉
+
+고려해야할 것
+필터 종류 - 콤보박스에서 선택
+시작/끝 각도오프셋 (업데이트로 0~360 범위가 아니어도 됨, 기본 0-180)
+시작/끝 강도 (텍스트에디팅인 만큼 0~100 범위가 아니어도 됨, 기본 100-0)
+밀도(각도차 / 5 추천, 높을수록 부드럽고 낮을수록 렉이 덜하다는 것 안내)
