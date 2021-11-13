@@ -1,5 +1,5 @@
 필터
-Greyscale - 흑백
+Grayscale - 흑백
 Sepia - 세피아
 VHS - VHS
 LED - LED

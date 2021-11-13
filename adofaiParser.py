@@ -1,17 +1,25 @@
-from typing import Callable, Union
+import typing
 
 import json
 
-from parseHelper import Filters, MapType, PathType
+from parseHelper import Filters
+from parseHelper import EventType, MapType, PathType
 from parseHelper import MakeFilter
 from parseHelper import ParseException, ExpectedParseException, UnExpectedParseException
 
+def addFilter(Map: MapType, filters: typing.List[EventType]):
+    actions: typing.List[EventType] = Map['actions']
+    actions += filters
+    actions.sort(key=lambda action: action["floor"])
+    Map["actions"] = actions
+    return Map
+
 def run(
-    fileName: str, filter: str,
+    fileName: str, targetFloor: int, filter: str,
     startAngleOffset: float, endAngleOffset: float,
     startIntensity: int, endIntensity: int,
     density: int,
-    logger: Callable[[str], None]):
+    logger: typing.Callable[[str], None]):
 
     logger("Loading Map file")
     
@@ -20,9 +28,20 @@ def run(
         rawString = rawString.replace(',\n}\n', '\n}\n').replace(',\n}', '\n}')
         Map: MapType = json.loads(rawString)
     
-    # pathData for Hallowen or complementable version
-    logger("Loading pathData/angleData")
+    logger("Making Filter list")
+
+    if density < 2:
+        raise ParseException("필터 갯수는 두 개 이상으로 해주세요!")
+
+    # (density - 1) * (delta) = end - start
+    intensityDelta = (endIntensity - startIntensity) / density
+    angleOffsetDelta = (endAngleOffset - startAngleOffset) / density
+    filterList = [MakeFilter(
+        targetFloor, filter, startIntensity + intensityDelta * i, startAngleOffset + angleOffsetDelta * i
+    ) for i in range(density + 1)]
     
-    data: Union[PathType, None] = Map.get("pathData", Map.get("angleData", None))
-    if not data:
-        raise ParseException("얼불춤 파일이 아닙니다. 얼불춤 파일을 선택해주세요!")
+    logger("Make and Dump new map")
+    
+    newMap = addFilter(Map, filterList)
+    with open(fileName[:-7] + '_Filtered.adofai', 'w', encoding='utf-8-sig') as newFile:
+        json.dump(newMap, newFile, indent=4)

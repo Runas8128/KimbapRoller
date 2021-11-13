@@ -55,12 +55,7 @@ class UI:
         self.window.bind('<Escape>', closeWindow)
     
     def InitValues(self):
-        self.Log = tkinter.StringVar(self.window, value='test', name='Log')
-        self.startAO = tkinter.DoubleVar(self.window, value=0, name='startAO')
-        self.endAO = tkinter.DoubleVar(self.window, value=180, name='endAO')
-        self.startI = tkinter.IntVar(self.window, value=100, name='startI')
-        self.endI = tkinter.IntVar(self.window, value=0, name="endI")
-        self.den = tkinter.IntVar(self.window, value=180, name='den')
+        self.Log = tkinter.StringVar(self.window, value='', name='Log')
     
     def BuildLabel(self, text: str, font: tkinter.font.Font, pos: PosType, parent: tkinter.Widget=None, *, var: tkinter.StringVar=None):
         label = tkinter.Label(parent if parent else self.window, text=text, height=3, font=font, textvariable=var)
@@ -97,11 +92,6 @@ class UI:
         comboBox.current(0)
         self.Elements.append((comboBox, pos))
         return comboBox
-    
-    def BuildSpinBox(self, pos: PosType, parent: tkinter.Widget=None, *, var: tkinter.DoubleVar=None):
-        spinBox = tkinter.Spinbox(parent if parent else self.window, textvariable=var)
-        self.Elements.append((spinBox, pos))
-        return spinBox
 
     def BuildElements(self):
         copyright = self.BuildLabel('made by Runas, ', Font("Arial", 10), Pos(380, 430))
@@ -127,26 +117,35 @@ class UI:
 
         self.BuildButton("Browse...", onClickBrowseButton, Pos(490, 90, 100, 30))
 
-        self.BuildLabel("필터 종류 선택", Font('Arial', 12), Pos(60, 130, 100, 50))
-        filterComboBox = self.BuildComboBox(list(adofaiParser.Filters.keys()), Pos(65, 200, 175, 30))
+        self.BuildLabel("대상 타일", Font('Arial', 12), Pos(45, 130, 100, 50))
+        targetFloor = self.BuildEntry(Pos(150, 145, 100, 25))
+        targetFloor.insert(tkinter.END, "0")
 
-        self.BuildLabel("각도 오프셋 설정", Font('Arial', 12), Pos(300, 130, 100, 50))
+        self.BuildLabel("필터 종류 선택", Font('Arial', 12), Pos(60, 170, 100, 50))
+        filterComboBox = self.BuildComboBox(list(adofaiParser.Filters.keys()), Pos(65, 215, 175, 30))
+
+        self.BuildLabel("각도 오프셋 설정 (소수점 사용 가능)", Font('Arial', 12), Pos(300, 130, 0, 50))
         self.BuildLabel("시작 각도", Font('Arial', 10), Pos(305, 180, 0, 20))
-        startAngleOffset = self.BuildSpinBox(Pos(380, 180, 100, 25), var=self.startAO)
+        startAngleOffset = self.BuildEntry(Pos(380, 180, 100, 25))
+        startAngleOffset.insert(tkinter.END, "0")
         self.BuildLabel("끝 각도", Font('Arial', 10), Pos(305, 220, 0, 20))
-        endAngleOffset = self.BuildSpinBox(Pos(380, 220, 100, 25), var=self.endAO)
+        endAngleOffset = self.BuildEntry(Pos(380, 220, 100, 25))
+        endAngleOffset.insert(tkinter.END, "180")
 
         self.BuildLabel("필터 강도 설정", Font('Arial', 12), Pos(60, 245, 100, 50))
-        self.BuildLabel("끝 각도", Font('Arial', 10), Pos(65, 295, 0, 20))
-        startIntensity = self.BuildSpinBox(Pos(140, 295, 100, 25), var=self.startI)
-        self.BuildLabel("끝 각도", Font('Arial', 10), Pos(65, 335, 0, 20))
-        endIntensity = self.BuildSpinBox(Pos(140, 325, 100, 25), var=self.endI)
+        self.BuildLabel("시작 강도", Font('Arial', 10), Pos(65, 295, 0, 20))
+        startIntensity = self.BuildEntry(Pos(140, 295, 100, 25))
+        startIntensity.insert(tkinter.END, "0")
+        self.BuildLabel("끝 강도", Font('Arial', 10), Pos(65, 335, 0, 20))
+        endIntensity = self.BuildEntry(Pos(140, 335, 100, 25))
+        endIntensity.insert(tkinter.END, "100")
         
         self.BuildLabel("이펙 갯수", Font('Arial', 12), Pos(280, 245, 100, 50))
         self.BuildLabel("많을수록 부드럽지만 렉이 심해집니다", Font('Arial', 10), Pos(300, 290, 0, 20))
-        density = self.BuildSpinBox(Pos(305, 320, 150, 25), var=self.den)
+        density = self.BuildEntry(Pos(305, 320, 150, 25))
+        density.insert(tkinter.END, "180")
 
-        self.BuildLabel("test", Font('Arial', 10), Pos(50, 410), var=self.Log)
+        self.BuildLabel("", Font('Arial', 10), Pos(50, 410), var=self.Log)
         progress = self.BuildProgressBar(Pos(50, 390, 400))
 
         def Run():
@@ -158,10 +157,10 @@ class UI:
             
             def logger(log: str):
                 self.Log.set(log)
-                progress.step(100 / 5)
+                progress.step(100 / 3)
             
             try:
-                adofaiParser.run(fileName, filterComboBox.get(),
+                adofaiParser.run(fileName, int(targetFloor.get()), filterComboBox.get(),
                     float(startAngleOffset.get()), float(endAngleOffset.get()),
                     int(startIntensity.get()), int(endIntensity.get()),
                     int(density.get()),
@@ -169,13 +168,15 @@ class UI:
                 tkinter.messagebox.showinfo("done", "성공했습니다!")
             except adofaiParser.ParseException as Error:
                 tkinter.messagebox.showerror("error", str(Error))
+            except ValueError as Error:
+                tkinter.messagebox.showerror("error", "정수 또는 실수를 적절히 입력해주세요!")
             except Exception as Error:
                 tkinter.messagebox.showerror("fatal", f"예상치못한 오류가 발생했습니다.\n{Error}")
             finally:
                 progress.stop()
                 self.Log.set('')
 
-        self.BuildButton("실행!", Run, Pos(485, 370, 100, 70))
+        self.BuildButton("실행!", Run, Pos(485, 350, 100, 70))
         self.window.bind('<Return>', lambda event: Run())
     
     def PlaceElements(self):

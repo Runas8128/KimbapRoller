@@ -7,7 +7,7 @@ EventType = Dict[str, Union[int, str, float]]
 MapType = Dict[str, Union[PathType, SettingType, List[EventType]]]
 
 Filters = {
-    "흑백": "Greyscale",
+    "흑백": "Grayscale",
     "세피아": "Sepia",
     "VHS": "VHS",
     "LED": "LED",
@@ -15,7 +15,7 @@ Filters = {
     "눈폭풍": "Blizzard",
     "픽셀 눈": "PixelSnow",
     "압축": "Compression",
-    "픽셀화": "Pizelate",
+    "픽셀화": "Pixelate",
     "물결": "Waves",
     "잡음": "Static",
     "필름 그레인": "Grain",
@@ -36,8 +36,9 @@ class ExpectedParseException(UnExpectedParseException):
     def __init__(self, err: str, suggest: str):
         super().__init__(err + suggest + '한 후에도 오류가 지속된다면 ')
 
-def MakeFilter(floor: int, name: str, intensity: int, angleOffset: float):
+def MakeFilter(floor: int, name: str, intensity: int, angleOffset: float) -> EventType:
     return {
-        "floor": floor, "eventType": "SetFilter", "filter": name, "enabled": "Enabled", "intensity": intensity,
+        "floor": floor, "eventType": "SetFilter",
+        "filter": Filters[name], "enabled": "Enabled", "intensity": intensity,
         "disableOthers": "Disabled", "angleOffset": angleOffset, "eventTag": ""
     }
