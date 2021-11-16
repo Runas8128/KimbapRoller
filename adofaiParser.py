@@ -1,14 +1,10 @@
-import typing
-
 import json
+from typing import Callable, List
 
-from parseHelper import Filters
-from parseHelper import EventType, MapType, PathType
-from parseHelper import MakeFilter
-from parseHelper import ParseException, ExpectedParseException, UnExpectedParseException
+from parseHelper import *
 
-def addFilter(Map: MapType, filters: typing.List[EventType]):
-    actions: typing.List[EventType] = Map['actions']
+def addFilter(Map: MapType, filters: List[EventType]):
+    actions: List[EventType] = Map['actions']
     actions += filters
     actions.sort(key=lambda action: action["floor"])
     Map["actions"] = actions
@@ -19,14 +15,18 @@ def run(
     startAngleOffset: float, endAngleOffset: float,
     startIntensity: int, endIntensity: int,
     density: int,
-    logger: typing.Callable[[str], None]):
+    logger: Callable[[str], None]):
 
     logger("Loading Map file")
-    
+
     with open(fileName, 'r', encoding='utf-8-sig') as adofaiFile:
-        rawString = adofaiFile.read()
-        rawString = rawString.replace(',\n}\n', '\n}\n').replace(',\n}', '\n}')
-        Map: MapType = json.loads(rawString)
+        rawString = adofaiFile.read()\
+                .replace(',\n}\n', '\n}\n')\
+                .replace(',\n}', '\n}')\
+                .replace(', }', '}')\
+                .replace(',,', ',')
+        
+        Map: MapType = json.loads(rawString, strict=False)
     
     logger("Making Filter list")
 
